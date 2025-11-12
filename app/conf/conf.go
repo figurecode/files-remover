@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -18,6 +19,10 @@ type Option func(*Config) error
 
 func WithErrStream(errStream io.Writer) Option {
 	return func(c *Config) error {
+		if errStream == nil {
+			return errors.New("ErrStream cannot be nil")
+		}
+
 		c.ErrStream = errStream
 
 		return nil
@@ -26,6 +31,10 @@ func WithErrStream(errStream io.Writer) Option {
 
 func WithOutStream(outStream io.Writer) Option {
 	return func(c *Config) error {
+		if outStream == nil {
+			return errors.New("OutStream cannot be nil")
+		}
+
 		c.OutStream = outStream
 
 		return nil
@@ -34,7 +43,21 @@ func WithOutStream(outStream io.Writer) Option {
 
 func WithDir(dir string) Option {
 	return func(c *Config) error {
-		c.Dir = dir
+		c.Dir = strings.TrimSpace(dir)
+
+		if len(c.Dir) == 0 {
+			return errors.New("Search directory not specified")
+		}
+
+		return nil
+	}
+}
+
+func WithExcludeDir(excDir string) Option {
+	return func(c *Config) error {
+		if len(excDir) != 0 {
+			c.ExcDir = strings.Split(strings.TrimSpace(excDir), " ")
+		}
 
 		return nil
 	}
@@ -52,17 +75,18 @@ func WithFilesName(fNames []string) Option {
 	}
 }
 
-func WithIsDemo(isDemo bool) Option {
+func WithIsDemo(isDemo string) Option {
 	return func(c *Config) error {
-		c.IsDemo = isDemo
+		c.IsDemo = isDemo == "true"
 
 		return nil
 	}
 }
 
-func NewConfig(opts ...Option) (Config, error) {
+func New(opts ...Option) (Config, error) {
 	c := Config{
 		Dir:       "",
+		ExcDir:    make([]string, 0),
 		FilesName: make([]string, 0),
 		IsDemo:    true,
 		ErrStream: os.Stderr,
