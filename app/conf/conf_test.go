@@ -256,3 +256,25 @@ func TestWithIsDemo(t *testing.T) {
 		check(t, got, want)
 	})
 }
+
+func TestNew(t *testing.T) {
+	dftExcDir := make([]string, 0)
+	dftIsDemo := true
+
+	cfg, err := New(
+		WithDir("/"),
+		WithFilesName([]string{"file1"}),
+	)
+
+	if err != nil {
+		t.Fatal("Error creating config: ", err)
+	}
+
+	if cfg.IsDemo != dftIsDemo {
+		t.Errorf("IsDemo: invalid default value, got %t want %t", cfg.IsDemo, dftIsDemo)
+	}
+
+	if len(cfg.ExcDir) != 0 {
+		t.Errorf("ExcDir: invalid default value, got %v want %v", cfg.ExcDir, dftExcDir)
+	}
+}
