@@ -22,6 +22,7 @@ func main() {
 	flag.StringVar(&scanDir, "d", "", "Путь к директорию, в которой будет происходить поиск")
 	flag.StringVar(&excDir, "e", "", "Название поддиректорий, которые нужно исключить из поиска")
 	flag.StringVar(&isDemo, "m", "true", "Включить демо-режим")
+	flag.Parse()
 
 	filesName = flag.Args();
 
