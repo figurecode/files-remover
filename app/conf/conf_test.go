@@ -114,7 +114,7 @@ func TestWithExcludeDir(t *testing.T) {
 	t.Run("set ExcDir", func(t *testing.T) {
 		cfg := &Config{}
 
-		got := "exclude1 exclude2"
+		got := "exclude1, exclude2"
 		want := []string{"exclude1", "exclude2"}
 
 		opt := WithExcludeDir(got)
@@ -140,7 +140,7 @@ func TestWithExcludeDir(t *testing.T) {
 	t.Run("trim ExcDir value", func(t *testing.T) {
 		cfg := &Config{}
 
-		got := " exclude1 exclude2 "
+		got := " exclude1, exclude2 "
 		want := []string{"exclude1", "exclude2"}
 
 		opt := WithExcludeDir(got)

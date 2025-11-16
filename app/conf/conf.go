@@ -56,7 +56,11 @@ func WithDir(dir string) Option {
 func WithExcludeDir(excDir string) Option {
 	return func(c *Config) error {
 		if len(excDir) != 0 {
-			c.ExcDir = strings.Split(strings.TrimSpace(excDir), " ")
+			d := strings.Split(excDir, ",")
+
+			for _, v := range d {
+				c.ExcDir = append(c.ExcDir, strings.TrimSpace(v))
+			}
 		}
 
 		return nil
