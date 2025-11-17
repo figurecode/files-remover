@@ -6,8 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/figurecode/files-remover/conf"
+	"github.com/figurecode/files-remover/scanner"
 )
 
 // Принимает параметры:
@@ -26,20 +28,26 @@ func main() {
 	flag.StringVar(&isDemo, "m", "true", "Включить демо-режим")
 	flag.Parse()
 
-	filesName = flag.Args();
+	filesName = flag.Args()
+
+	path, err := scanner.ResolvePath(scanDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error scan dir: %v\n", err)
+	}
 
 	cfg, err := conf.New(
-		conf.WithDir(scanDir),
+		conf.WithDir(path),
 		conf.WithExcludeDir(excDir),
 		conf.WithIsDemo("true"),
 		conf.WithFilesName(filesName),
 	)
-
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error configuration: %v\n", err)
 	}
 
 	fmt.Printf("%v\n", cfg)
+
+	var fRemove = make(map[string]string)
 
 	err = filepath.WalkDir(cfg.Dir, func(path string, d os.DirEntry, err error) error {
 
@@ -49,8 +57,22 @@ func main() {
 			return filepath.SkipDir
 		}
 
-		if d.IsDir() {
-			fmt.Fprintf(cfg.OutStream, "--- %s\n", path)	
+		_, fName := filepath.Split(path)
+
+		if strings.Contains(fName, cfg.FilesName[0]) {
+			fInfo, err := os.Stat(path)
+
+			if err != nil {
+				if os.IsNotExist(err) {
+					fmt.Println("File is not exist: ", path)
+				}
+
+				return nil
+			}
+
+			fmt.Printf("File size: %d\n", fInfo.Size())
+
+			fRemove[path] = cfg.FilesName[0]
 		}
 
 		return nil
@@ -61,6 +83,8 @@ func main() {
 
 		os.Exit(1)
 	}
+
+	fmt.Println(fRemove)
 
 	fmt.Println("Ok")
 	os.Exit(0)
