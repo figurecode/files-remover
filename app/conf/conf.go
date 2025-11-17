@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	Dir                  string    // директория в которой будем искать
-	ExcDir               []string  // названия поддерикторий, которые нужно исключить из обхода
-	FilesName            []string  // названия файлов, которые будем искать и удалять
-	IsDemo               bool      // демо-режим работы приложения, выводит только информацию
-	ErrStream, OutStream io.Writer // стандартный вывод ошибок и результатов
+	Dir                  string          // директория в которой будем искать
+	ExcDir               []string        // названия поддерикторий, которые нужно исключить из обхода
+	FilesName            map[string]bool // названия файлов, которые будем искать и удалять
+	FileNameSep          string          // разделитель для разбиения названия файла на части
+	IsDemo               bool            // демо-режим работы приложения, выводит только информацию
+	ErrStream, OutStream io.Writer       // стандартный вывод ошибок и результатов
 }
 
 type Option func(*Config) error
@@ -73,7 +74,23 @@ func WithFilesName(fNames []string) Option {
 			return errors.New("The file name list cannot be empty.")
 		}
 
-		c.FilesName = fNames
+		if c.FilesName == nil {
+			c.FilesName = make(map[string]bool)
+		}
+
+		for _, v := range fNames {
+			if !c.FilesName[v] {
+				c.FilesName[v] = true
+			}
+		}
+
+		return nil
+	}
+}
+
+func WithFileNameSep(sep string) Option {
+	return func(c *Config) error {
+		c.FileNameSep = sep
 
 		return nil
 	}
@@ -89,12 +106,13 @@ func WithIsDemo(isDemo string) Option {
 
 func New(opts ...Option) (Config, error) {
 	c := Config{
-		Dir:       "",
-		ExcDir:    make([]string, 0),
-		FilesName: make([]string, 0),
-		IsDemo:    true,
-		ErrStream: os.Stderr,
-		OutStream: os.Stdout,
+		Dir:         "",
+		ExcDir:      make([]string, 0),
+		FilesName:   make(map[string]bool),
+		FileNameSep: "-",
+		IsDemo:      true,
+		ErrStream:   os.Stderr,
+		OutStream:   os.Stdout,
 	}
 
 	for _, opt := range opts {

@@ -196,13 +196,9 @@ func TestWithFilesName(t *testing.T) {
 			t.Fatalf("Error set FilesName %v\n", err)
 		}
 
-		if len(cfg.FilesName) != len(want) {
-			t.Errorf("got FilesName %q, want %q\n", cfg.FilesName, want)
-		}
-
 		for i := range want {
-			if cfg.FilesName[i] != want[i] {
-				t.Errorf("got FilesName %q, want %q\n", cfg.FilesName, want)
+			if _, ok := cfg.FilesName[want[i]]; !ok {
+				t.Errorf("The files map does not contain the entire data set. Absent %s, list %q, got map: %v\n", want[i], want, cfg.FilesName)
 
 				break
 			}
