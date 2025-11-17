@@ -14,7 +14,7 @@ func TestResolvePath(t *testing.T) {
 		expected string
 	}
 
-	chackerPath := func(t testing.TB, tCases tCases) {
+	checkerPath := func(t testing.TB, tCases tCases) {
 		t.Helper()
 
 		for _, tc := range tCases {
@@ -33,7 +33,7 @@ func TestResolvePath(t *testing.T) {
 			{"/", "/"},
 		}
 
-		chackerPath(t, tCases)
+		checkerPath(t, tCases)
 	})
 
 	t.Run("resolv relative path", func(t *testing.T) {
@@ -49,6 +49,6 @@ func TestResolvePath(t *testing.T) {
 			{"../parent", filepath.Join(wd, "../parent")},
 		}
 
-		chackerPath(t, tCases)
+		checkerPath(t, tCases)
 	})
 }
