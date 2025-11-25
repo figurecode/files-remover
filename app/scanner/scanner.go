@@ -29,7 +29,7 @@ func ScanDir(cfg conf.Config) (FilesMather, error) {
 
 	err := filepath.WalkDir(cfg.Dir, func(path string, d os.DirEntry, err error) error {
 
-		if d.IsDir() && slices.Contains(cfg.ExcDir, d.Name()) {
+		if d.IsDir() && slices.Contains(cfg.ExcDirs, d.Name()) {
 			return filepath.SkipDir
 		}
 

@@ -2,183 +2,60 @@ package conf
 
 import (
 	"bytes"
+	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWithErrStream(t *testing.T) {
-	stderrBuf := &bytes.Buffer{}
-	cfg := &Config{}
 
-	opt := WithErrStream(stderrBuf)
-	err := opt(cfg)
+	t.Run("set ErrStream", func(t *testing.T) {
+		errStreamHelper(t, &bytes.Buffer{}, &bytes.Buffer{}, nil)
+	})
 
-	if err != nil {
-		t.Fatalf("Error set ErrStream %v\n", err)
-	}
-
-	if cfg.ErrStream != stderrBuf {
-		t.Errorf("got ErrStream %p, want %p\n", cfg.ErrStream, stderrBuf)
-	}
-}
-
-func TestWithErrStreamNil(t *testing.T) {
-	cfg := &Config{}
-
-	opt := WithErrStream(nil)
-	err := opt(cfg)
-
-	if err == nil {
-		t.Fatalf("WithErrStream not returned error\n")
-	}
+	t.Run("set nil ErrStream", func(t *testing.T) {
+		errStreamHelper(t, nil, nil, ErrMessErrStreamIsNil)
+	})
 }
 
 func TestWithOutStream(t *testing.T) {
-	stdoutBuf := &bytes.Buffer{}
-	cfg := &Config{}
 
-	opt := WithOutStream(stdoutBuf)
-	err := opt(cfg)
+	t.Run("set OutStream", func(t *testing.T) {
+		outStreamHelper(t, &bytes.Buffer{}, &bytes.Buffer{}, nil)
+	})
 
-	if err != nil {
-		t.Fatalf("Error set OutStream %v\n", err)
-	}
-
-	if cfg.OutStream != stdoutBuf {
-		t.Errorf("got OutStream %p, want %p\n", cfg.OutStream, stdoutBuf)
-	}
-}
-
-func TestWithOutStreamNil(t *testing.T) {
-	cfg := &Config{}
-
-	opt := WithOutStream(nil)
-	err := opt(cfg)
-
-	if err == nil {
-		t.Fatalf("WithOutStream not returned error\n")
-	}
+	t.Run("set nil OutStream", func(t *testing.T) {
+		outStreamHelper(t, nil, nil, ErrMessOutStreamIsNil)
+	})
 }
 
 func TestWithDir(t *testing.T) {
+
 	t.Run("set Dir", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := "/tmp"
-		want := "/tmp"
-
-		opt := WithDir(got)
-		err := opt(cfg)
-
-		if err != nil {
-			t.Fatalf("Error set Dir %v\n", err)
-		}
-
-		if cfg.Dir != want {
-			t.Errorf("got Dir %s, want %s\n", cfg.Dir, want)
-		}
+		dirHelper(t, "/tmp", "/tmp", nil)
 	})
 
 	t.Run("trim Dir value", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := " /tmp "
-		want := "/tmp"
-
-		opt := WithDir(got)
-		err := opt(cfg)
-
-		if err != nil {
-			t.Fatalf("Error set Dir %v\n", err)
-		}
-
-		if cfg.Dir != want {
-			t.Errorf("got Dir %s, want %s\n", cfg.Dir, want)
-		}
+		dirHelper(t, " /tmp", "/tmp", nil)
 	})
 
 	t.Run("check empty Dir", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := ""
-
-		opt := WithDir(got)
-		err := opt(cfg)
-
-		if err == nil {
-			t.Errorf("WithDir not returned error\n")
-		}
+		dirHelper(t, "", "", ErrMessDirIsNotSpecified)
 	})
 }
 
 func TestWithExcludeDir(t *testing.T) {
 	t.Run("set ExcDir", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := "exclude1, exclude2"
-		want := []string{"exclude1", "exclude2"}
-
-		opt := WithExcludeDir(got)
-		err := opt(cfg)
-
-		if err != nil {
-			t.Fatalf("Error set ExcDir %v\n", err)
-		}
-
-		if len(cfg.ExcDir) != len(want) {
-			t.Errorf("got ExcDir %q, want %q\n", cfg.ExcDir, want)
-		}
-
-		for i := range want {
-			if cfg.ExcDir[i] != want[i] {
-				t.Errorf("got ExcDir %q, want %q\n", cfg.ExcDir, want)
-
-				break
-			}
-		}
+		excDirsHelper(t, "exclude1, exclude2", []string{"exclude1", "exclude2"})
 	})
 
 	t.Run("trim ExcDir value", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := " exclude1, exclude2 "
-		want := []string{"exclude1", "exclude2"}
-
-		opt := WithExcludeDir(got)
-		err := opt(cfg)
-
-		if err != nil {
-			t.Fatalf("Error set ExcDir %v\n", err)
-		}
-
-		if len(cfg.ExcDir) != len(want) {
-			t.Errorf("got ExcDir %q, want %q\n", cfg.ExcDir, want)
-		}
-
-		for i := range want {
-			if cfg.ExcDir[i] != want[i] {
-				t.Errorf("got ExcDir %q, want %q\n", cfg.ExcDir, want)
-
-				break
-			}
-		}
+		excDirsHelper(t, " exclude1, exclude2 ", []string{"exclude1", "exclude2"})
 	})
 
 	t.Run("check empty ExcDir", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := ""
-		want := make([]string, 0)
-
-		opt := WithExcludeDir(got)
-		err := opt(cfg)
-
-		if err != nil {
-			t.Fatalf("Error set ExcDir %v\n", err)
-		}
-
-		if len(cfg.ExcDir) != len(want) {
-			t.Errorf("got ExcDir %q, want %q\n", cfg.ExcDir, want)
-		}
+		excDirsHelper(t, "", []string{})
 	})
 }
 
@@ -192,9 +69,7 @@ func TestWithFilesName(t *testing.T) {
 		opt := WithFilesName(got)
 		err := opt(cfg)
 
-		if err != nil {
-			t.Fatalf("Error set FilesName %v\n", err)
-		}
+		assert.NoError(t, err)
 
 		for i := range want {
 			if _, ok := cfg.FilesName[want[i]]; !ok {
@@ -213,64 +88,113 @@ func TestWithFilesName(t *testing.T) {
 		opt := WithFilesName(got)
 		err := opt(cfg)
 
-		if err == nil {
-			t.Errorf("WithFilesName not returned error\n")
-		}
+		assert.Error(t, err, ErrMessFileListIsEmpty.Error())
 	})
 }
 
 func TestWithIsDemo(t *testing.T) {
 
-	check := func(t *testing.T, got string, want bool) {
-		t.Helper()
-
-		cfg := &Config{}
-
-		opt := WithIsDemo(got)
-		err := opt(cfg)
-
-		if err != nil {
-			t.Fatalf("Error set IsDemo %v\n", err)
-		}
-
-		if cfg.IsDemo != want {
-			t.Errorf("got IsDemo %v, want %v\n", cfg.IsDemo, want)
-		}
-	}
-
 	t.Run("set IsDemo", func(t *testing.T) {
-		got := "true"
-		want := true
-
-		check(t, got, want)
+		isDemoHelper(t, "true", true)
 	})
 
 	t.Run("set IsDemo false", func(t *testing.T) {
-		got := ""
-		want := false
-
-		check(t, got, want)
+		isDemoHelper(t, "", false)
 	})
 }
 
 func TestNew(t *testing.T) {
-	dftExcDir := make([]string, 0)
-	dftIsDemo := true
+	filesName := []string{"file1", "file2"}
 
 	cfg, err := New(
 		WithDir("/"),
-		WithFilesName([]string{"file1"}),
+		WithFilesName(filesName),
 	)
 
-	if err != nil {
-		t.Fatal("Error creating config: ", err)
+	assert.Equal(t, "/", cfg.Dir)
+
+	for i := range filesName {
+		if _, ok := cfg.FilesName[filesName[i]]; !ok {
+			t.Errorf("The files map does not contain the entire data set. Absent %s, list %q, got map: %v\n", filesName[i], filesName, cfg.FilesName)
+
+			break
+		}
 	}
 
-	if cfg.IsDemo != dftIsDemo {
-		t.Errorf("IsDemo: invalid default value, got %t want %t", cfg.IsDemo, dftIsDemo)
+	assert.NoError(t, err)
+	assert.True(t, cfg.IsDemo)
+	assert.Len(t, cfg.ExcDirs, 0)
+}
+
+func dirHelper(t testing.TB, got, want string, wantErr error) {
+	t.Helper()
+
+	cfg := &Config{}
+	opt := WithDir(got)
+	err := opt(cfg)
+
+	checkerEqual(t, cfg.Dir, want, err, wantErr)
+}
+
+func errStreamHelper(t testing.TB, got, want io.Writer, wantErr error) {
+	t.Helper()
+
+	cfg := &Config{}
+	opt := WithErrStream(got)
+	err := opt(cfg)
+
+	checkerEqual(t, cfg.ErrStream, want, err, wantErr)
+}
+
+func outStreamHelper(t testing.TB, got, want io.Writer, wantErr error) {
+	t.Helper()
+
+	cfg := &Config{}
+	opt := WithOutStream(got)
+	err := opt(cfg)
+
+	checkerEqual(t, cfg.OutStream, want, err, wantErr)
+}
+
+func excDirsHelper(t testing.TB, got string, want []string) {
+	t.Helper()
+
+	cfg := &Config{}
+
+	opt := WithExcludeDir(got)
+	err := opt(cfg)
+
+	checkerSlice(t, cfg.ExcDirs, want, err, nil)
+}
+
+func isDemoHelper(t *testing.T, got string, want bool) {
+	t.Helper()
+
+	cfg := &Config{}
+
+	opt := WithIsDemo(got)
+	err := opt(cfg)
+
+	checkerEqual(t, cfg.IsDemo, want, err, nil)
+}
+
+func checkerEqual(t testing.TB, got, want interface{}, gotErr, wantErr error) {
+	if wantErr == nil {
+		assert.NoError(t, gotErr)
+		assert.Equal(t, want, got)
 	}
 
-	if len(cfg.ExcDir) != 0 {
-		t.Errorf("ExcDir: invalid default value, got %v want %v", cfg.ExcDir, dftExcDir)
+	if wantErr != nil {
+		assert.Error(t, gotErr, wantErr.Error())
+	}
+}
+
+func checkerSlice(t testing.TB, got, want []string, gotErr, wantErr error) {
+	assert.NoError(t, gotErr)
+	assert.Len(t, got, len(want))
+	assert.ElementsMatch(t, got, want)
+
+	if wantErr != nil {
+		assert.Error(t, gotErr, wantErr.Error())
 	}
 }

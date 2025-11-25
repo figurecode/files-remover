@@ -7,9 +7,14 @@ import (
 	"strings"
 )
 
+var ErrMessErrStreamIsNil = errors.New("ErrStream cannot be nil")
+var ErrMessOutStreamIsNil = errors.New("OutStream cannot be nil")
+var ErrMessDirIsNotSpecified = errors.New("Search directory not specified")
+var ErrMessFileListIsEmpty = errors.New("The file name list cannot be empty")
+
 type Config struct {
 	Dir                  string          // директория в которой будем искать
-	ExcDir               []string        // названия поддерикторий, которые нужно исключить из обхода
+	ExcDirs              []string        // названия поддерикторий, которые нужно исключить из обхода
 	FilesName            map[string]bool // названия файлов, которые будем искать и удалять
 	FileNameSep          string          // разделитель для разбиения названия файла на части
 	IsDemo               bool            // демо-режим работы приложения, выводит только информацию
@@ -21,7 +26,7 @@ type Option func(*Config) error
 func WithErrStream(errStream io.Writer) Option {
 	return func(c *Config) error {
 		if errStream == nil {
-			return errors.New("ErrStream cannot be nil")
+			return ErrMessErrStreamIsNil
 		}
 
 		c.ErrStream = errStream
@@ -33,7 +38,7 @@ func WithErrStream(errStream io.Writer) Option {
 func WithOutStream(outStream io.Writer) Option {
 	return func(c *Config) error {
 		if outStream == nil {
-			return errors.New("OutStream cannot be nil")
+			return ErrMessOutStreamIsNil
 		}
 
 		c.OutStream = outStream
@@ -47,7 +52,7 @@ func WithDir(dir string) Option {
 		c.Dir = strings.TrimSpace(dir)
 
 		if len(c.Dir) == 0 {
-			return errors.New("Search directory not specified")
+			return ErrMessDirIsNotSpecified
 		}
 
 		return nil
@@ -60,7 +65,7 @@ func WithExcludeDir(excDir string) Option {
 			d := strings.Split(excDir, ",")
 
 			for _, v := range d {
-				c.ExcDir = append(c.ExcDir, strings.TrimSpace(v))
+				c.ExcDirs = append(c.ExcDirs, strings.TrimSpace(v))
 			}
 		}
 
@@ -71,7 +76,7 @@ func WithExcludeDir(excDir string) Option {
 func WithFilesName(fNames []string) Option {
 	return func(c *Config) error {
 		if len(fNames) == 0 {
-			return errors.New("The file name list cannot be empty.")
+			return ErrMessFileListIsEmpty
 		}
 
 		if c.FilesName == nil {
@@ -107,7 +112,7 @@ func WithIsDemo(isDemo string) Option {
 func New(opts ...Option) (Config, error) {
 	c := Config{
 		Dir:         "",
-		ExcDir:      make([]string, 0),
+		ExcDirs:     make([]string, 0),
 		FilesName:   make(map[string]bool),
 		FileNameSep: "-",
 		IsDemo:      true,
