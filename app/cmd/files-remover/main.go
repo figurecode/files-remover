@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/figurecode/files-remover/conf"
+	"github.com/figurecode/files-remover/remover"
 	"github.com/figurecode/files-remover/scanner"
 )
 
@@ -45,7 +46,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error configuration: %v\n", err)
 	}
 
-	filesMath, err := scanner.ScanDir(cfg)
+	files, err := scanner.ScanDir(cfg)
 
 	if err != nil {
 		fmt.Fprintf(cfg.ErrStream, "Error traversing directory %q: %v\n", cfg.Dir, err)
@@ -53,8 +54,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	for i, v := range filesMath {
-		fmt.Printf("path: %s size: %d\n", i, v)
+	remover := remover.NewRemover(cfg.IsDemo)
+
+	err = remover.Execute(files)
+
+	if err != nil {
+		fmt.Fprintf(cfg.ErrStream, "Error remove files %v\n", err)
 	}
 
 	fmt.Println("Ok")
