@@ -9,7 +9,7 @@ import (
 	"github.com/figurecode/files-remover/conf"
 )
 
-type FilesMather map[string]int64
+type FoundFiles map[string]int64
 
 func ResolvePath(path string) (string, error) {
 	if filepath.IsAbs(path) {
@@ -24,8 +24,8 @@ func ResolvePath(path string) (string, error) {
 	return filepath.Join(wd, path), nil
 }
 
-func ScanDir(cfg conf.Config) (FilesMather, error) {
-	files := make(FilesMather)
+func ScanDir(cfg conf.Config) (FoundFiles, error) {
+	files := make(FoundFiles)
 
 	err := filepath.WalkDir(cfg.Dir, func(path string, d os.DirEntry, err error) error {
 
@@ -43,7 +43,7 @@ func ScanDir(cfg conf.Config) (FilesMather, error) {
 	return files, err
 }
 
-func checkFile(cfg conf.Config, path string, files *FilesMather) error {
+func checkFile(cfg conf.Config, path string, files *FoundFiles) error {
 	_, fName := filepath.Split(path)
 
 	if match(cfg, fName) {
