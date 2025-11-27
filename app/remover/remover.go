@@ -16,7 +16,9 @@ const debugReportTempl = `{{.FilesCount}} files will be deleted in total
 Files to be deleted:
 {{range .Files}}---------------------------------
 PATH: {{.}}
-{{end}}`
+{{end}}
+END
+`
 
 func humanSize(bytes int64) string {
 	const unit = 1024

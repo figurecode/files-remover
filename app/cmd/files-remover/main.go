@@ -10,12 +10,6 @@ import (
 	"github.com/figurecode/files-remover/scanner"
 )
 
-// Принимает параметры:
-// * -d - обязательно, путь к каталогу, в котором будет происходить поиск
-// * -e - опционально, поддиректории, которые следует исключить из поиска
-// * -m - опционально, по умолчанию true, флаг режима, боевой или демо. В демо выводим только общую информацию без удаления файлов
-// * -s - опционально, по умолчанию "-", разделитель для разбиения названия файла на части
-// *  имя файла, которое будем искать, или через флаг передать путь к файлу с именами файлов
 func main() {
 	var scanDir string
 	var excDir string
@@ -23,10 +17,31 @@ func main() {
 	var isDemo string
 	var filesName []string
 
-	flag.StringVar(&scanDir, "d", "", "Путь к директорию, в которой будет происходить поиск")
-	flag.StringVar(&excDir, "e", "", "Название поддиректорий, которые нужно исключить из поиска, через запятаю")
-	flag.StringVar(&isDemo, "m", "true", "Включить демо-режим")
-	flag.StringVar(&fileNameSep, "s", "-", "Разделитель для разбиения названия файла на части")
+	flag.StringVar(&scanDir, "d", "", "Директория, в которой будет происходить поиск. Если не указан, то используется директория запуска скрипта")
+	flag.StringVar(&excDir, "e", "", "Исключаемые поддиректории через запятую")
+	flag.StringVar(&isDemo, "m", "true", "Режим: true — демо, false — удаление (по умолчанию true)")
+	flag.StringVar(&fileNameSep, "s", "-", "Разделитель в имени файла (по умолчанию '-')")
+
+	if len(os.Args) == 1 || (len(os.Args) == 2 && (os.Args[1] == "-h" || os.Args[1] == "--help")) {
+		fmt.Printf(`
+files-remover — массовая очистка файлов по шаблону имени
+
+Использование:
+	files-remover -d <директория> [флаги] <шаблон1> [шаблон2...]
+
+Флаги:
+	-d string   Директория для поиска (если не указана, то используется директория запуска скрипта)
+	-e string   Исключаемые поддиректории через запятую
+	-m string   Режим: true — демо, false — удаление (по умолчанию true)
+	-s string   Разделитель в имени файла (по умолчанию "-")
+
+Примеры:
+	files-remover -d /tmp temp-log backup-2024
+	files-remover -d /var/log -m false -e journal access-2024.log
+`)
+		os.Exit(0)
+	}
+
 	flag.Parse()
 
 	filesName = flag.Args()
@@ -40,11 +55,13 @@ func main() {
 		path,
 		filesName,
 		conf.WithExcludeDir(excDir),
-		conf.WithIsDemo("true"),
+		conf.WithIsDemo(isDemo),
 	)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error configuration: %v\n", err)
+
+		os.Exit(1)
 	}
 
 	files, err := scanner.ScanDir(cfg)
@@ -64,7 +81,5 @@ func main() {
 
 		os.Exit(1)
 	}
-
-	fmt.Println("Ok")
 	os.Exit(0)
 }
