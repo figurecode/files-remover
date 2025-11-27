@@ -56,6 +56,7 @@ files-remover — массовая очистка файлов по шаблон
 		filesName,
 		conf.WithExcludeDir(excDir),
 		conf.WithIsDemo(isDemo),
+		conf.WithFileNameSep(fileNameSep),
 	)
 
 	if err != nil {
