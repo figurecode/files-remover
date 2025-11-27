@@ -13,15 +13,27 @@ var ErrMessDirIsNotSpecified = errors.New("Search directory not specified")
 var ErrMessFileListIsEmpty = errors.New("The file name list cannot be empty")
 
 type Config struct {
-	Dir                  string          // директория в которой будем искать
+	Dir                  string          // обязательный параметр, директория в которой будем искать
+	FilesName            map[string]bool // обязательный параметр названия файлов, которые будем искать и удалять
 	ExcDirs              []string        // названия поддерикторий, которые нужно исключить из обхода
-	FilesName            map[string]bool // названия файлов, которые будем искать и удалять
 	FileNameSep          string          // разделитель для разбиения названия файла на части
 	IsDemo               bool            // демо-режим работы приложения, выводит только информацию
 	ErrStream, OutStream io.Writer       // стандартный вывод ошибок и результатов
 }
 
 type Option func(*Config) error
+
+func (c Config) validate() error {
+	if len(c.Dir) == 0 {
+		return ErrMessDirIsNotSpecified
+	}
+
+	if len(c.FilesName) == 0 {
+		return ErrMessFileListIsEmpty
+	}
+
+	return nil
+}
 
 func WithErrStream(errStream io.Writer) Option {
 	return func(c *Config) error {
@@ -47,18 +59,6 @@ func WithOutStream(outStream io.Writer) Option {
 	}
 }
 
-func WithDir(dir string) Option {
-	return func(c *Config) error {
-		c.Dir = strings.TrimSpace(dir)
-
-		if len(c.Dir) == 0 {
-			return ErrMessDirIsNotSpecified
-		}
-
-		return nil
-	}
-}
-
 func WithExcludeDir(excDir string) Option {
 	return func(c *Config) error {
 		if len(excDir) != 0 {
@@ -66,26 +66,6 @@ func WithExcludeDir(excDir string) Option {
 
 			for _, v := range d {
 				c.ExcDirs = append(c.ExcDirs, strings.TrimSpace(v))
-			}
-		}
-
-		return nil
-	}
-}
-
-func WithFilesName(fNames []string) Option {
-	return func(c *Config) error {
-		if len(fNames) == 0 {
-			return ErrMessFileListIsEmpty
-		}
-
-		if c.FilesName == nil {
-			c.FilesName = make(map[string]bool)
-		}
-
-		for _, v := range fNames {
-			if !c.FilesName[v] {
-				c.FilesName[v] = true
 			}
 		}
 
@@ -109,15 +89,30 @@ func WithIsDemo(isDemo string) Option {
 	}
 }
 
-func New(opts ...Option) (Config, error) {
+func New(dir string, fNames []string, opts ...Option) (Config, error) {
 	c := Config{
-		Dir:         "",
 		ExcDirs:     make([]string, 0),
-		FilesName:   make(map[string]bool),
 		FileNameSep: "-",
 		IsDemo:      true,
 		ErrStream:   os.Stderr,
 		OutStream:   os.Stdout,
+	}
+
+	c.Dir = strings.TrimSpace(dir)
+
+	if c.FilesName == nil {
+		c.FilesName = make(map[string]bool)
+	}
+	for _, v := range fNames {
+		if !c.FilesName[v] {
+			c.FilesName[v] = true
+		}
+	}
+
+	err := c.validate()
+
+	if err != nil {
+		return Config{}, err
 	}
 
 	for _, opt := range opts {

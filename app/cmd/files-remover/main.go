@@ -37,11 +37,12 @@ func main() {
 	}
 
 	cfg, err := conf.New(
-		conf.WithDir(path),
+		path,
+		filesName,
 		conf.WithExcludeDir(excDir),
 		conf.WithIsDemo("true"),
-		conf.WithFilesName(filesName),
 	)
+	
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error configuration: %v\n", err)
 	}

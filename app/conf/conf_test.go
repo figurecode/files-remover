@@ -8,6 +8,49 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNew(t *testing.T) {
+	t.Run("correct config", func(t *testing.T) {
+		filesName := []string{"file1", "file2"}
+		cfg, err := New(
+			"/",
+			filesName,
+		)
+
+		assert.Equal(t, "/", cfg.Dir)
+
+		for i := range filesName {
+			if _, ok := cfg.FilesName[filesName[i]]; !ok {
+				t.Errorf("The files map does not contain the entire data set. Absent %s, list %q, got map: %v\n", filesName[i], filesName, cfg.FilesName)
+
+				break
+			}
+		}
+
+		assert.NoError(t, err)
+		assert.True(t, cfg.IsDemo)
+		assert.Len(t, cfg.ExcDirs, 0)
+	})
+
+	t.Run("not correct config", func(t *testing.T) {
+		cfg, err := New("", nil)
+
+		assert.Error(t, err)
+		assert.Empty(t, cfg)
+	})
+
+	t.Run("check empty Dir", func(t *testing.T) {
+		_, err := New("", []string{"file1", "file2"})
+
+		assert.Error(t, err, ErrMessDirIsNotSpecified.Error())
+	})
+
+	t.Run("check empty Files", func(t *testing.T) {
+		_, err := New("/", []string{})
+
+		assert.Error(t, err, ErrMessFileListIsEmpty.Error())
+	})
+}
+
 func TestWithErrStream(t *testing.T) {
 
 	t.Run("set ErrStream", func(t *testing.T) {
@@ -30,21 +73,6 @@ func TestWithOutStream(t *testing.T) {
 	})
 }
 
-func TestWithDir(t *testing.T) {
-
-	t.Run("set Dir", func(t *testing.T) {
-		dirHelper(t, "/tmp", "/tmp", nil)
-	})
-
-	t.Run("trim Dir value", func(t *testing.T) {
-		dirHelper(t, " /tmp", "/tmp", nil)
-	})
-
-	t.Run("check empty Dir", func(t *testing.T) {
-		dirHelper(t, "", "", ErrMessDirIsNotSpecified)
-	})
-}
-
 func TestWithExcludeDir(t *testing.T) {
 	t.Run("set ExcDir", func(t *testing.T) {
 		excDirsHelper(t, "exclude1, exclude2", []string{"exclude1", "exclude2"})
@@ -59,39 +87,6 @@ func TestWithExcludeDir(t *testing.T) {
 	})
 }
 
-func TestWithFilesName(t *testing.T) {
-	t.Run("set FilesName", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := []string{"file1", "file2"}
-		want := []string{"file1", "file2"}
-
-		opt := WithFilesName(got)
-		err := opt(cfg)
-
-		assert.NoError(t, err)
-
-		for i := range want {
-			if _, ok := cfg.FilesName[want[i]]; !ok {
-				t.Errorf("The files map does not contain the entire data set. Absent %s, list %q, got map: %v\n", want[i], want, cfg.FilesName)
-
-				break
-			}
-		}
-	})
-
-	t.Run("check empty FilesName", func(t *testing.T) {
-		cfg := &Config{}
-
-		got := make([]string, 0)
-
-		opt := WithFilesName(got)
-		err := opt(cfg)
-
-		assert.Error(t, err, ErrMessFileListIsEmpty.Error())
-	})
-}
-
 func TestWithIsDemo(t *testing.T) {
 
 	t.Run("set IsDemo", func(t *testing.T) {
@@ -101,39 +96,6 @@ func TestWithIsDemo(t *testing.T) {
 	t.Run("set IsDemo false", func(t *testing.T) {
 		isDemoHelper(t, "", false)
 	})
-}
-
-func TestNew(t *testing.T) {
-	filesName := []string{"file1", "file2"}
-
-	cfg, err := New(
-		WithDir("/"),
-		WithFilesName(filesName),
-	)
-
-	assert.Equal(t, "/", cfg.Dir)
-
-	for i := range filesName {
-		if _, ok := cfg.FilesName[filesName[i]]; !ok {
-			t.Errorf("The files map does not contain the entire data set. Absent %s, list %q, got map: %v\n", filesName[i], filesName, cfg.FilesName)
-
-			break
-		}
-	}
-
-	assert.NoError(t, err)
-	assert.True(t, cfg.IsDemo)
-	assert.Len(t, cfg.ExcDirs, 0)
-}
-
-func dirHelper(t testing.TB, got, want string, wantErr error) {
-	t.Helper()
-
-	cfg := &Config{}
-	opt := WithDir(got)
-	err := opt(cfg)
-
-	checkerEqual(t, cfg.Dir, want, err, wantErr)
 }
 
 func errStreamHelper(t testing.TB, got, want io.Writer, wantErr error) {
