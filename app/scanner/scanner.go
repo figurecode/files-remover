@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -25,16 +26,28 @@ func ResolvePath(path string) (string, error) {
 }
 
 func ScanDir(cfg conf.Config) (FoundFiles, error) {
+	info, err := os.Stat(cfg.Dir)
+	if err != nil {
+		return nil, err
+	}
+
+	if !info.IsDir() {
+		return nil, fmt.Errorf("%q is not a directory", cfg.Dir)
+	}
+
 	files := make(FoundFiles)
 
-	err := filepath.WalkDir(cfg.Dir, func(path string, d os.DirEntry, err error) error {
-
-		if d.IsDir() && slices.Contains(cfg.ExcDirs, d.Name()) {
-			return filepath.SkipDir
+	err = filepath.WalkDir(cfg.Dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
 
 		if !d.IsDir() {
-			return checkFile(cfg, path, &files)
+			return checkFile(cfg, path, d, &files)
+		}
+
+		if len(cfg.ExcDirs) > 0 && slices.Contains(cfg.ExcDirs, d.Name()) {
+			return filepath.SkipDir
 		}
 
 		return nil
@@ -43,18 +56,20 @@ func ScanDir(cfg conf.Config) (FoundFiles, error) {
 	return files, err
 }
 
-func checkFile(cfg conf.Config, path string, files *FoundFiles) error {
+func checkFile(cfg conf.Config, path string, d os.DirEntry, files *FoundFiles) error {
 	_, fName := filepath.Split(path)
 
-	if match(cfg, fName) {
-		fInfo, err := os.Stat(path)
-
-		if err != nil {
-			return err
-		}
-
-		(*files)[path] = fInfo.Size()
+	if !match(cfg, fName) {
+		return nil
 	}
+
+	fInfo, err := d.Info()
+
+	if err != nil {
+		return nil
+	}
+
+	(*files)[path] = fInfo.Size()
 
 	return nil
 }
@@ -70,7 +85,9 @@ func match(cfg conf.Config, fName string) bool {
 
 	parts := strings.Split(fName, cfg.FileNameSep)
 	for _, part := range parts {
-		if _, ok := cfg.FilesName[part]; ok {
+		cleanPart := strings.TrimSuffix(part, filepath.Ext(part))
+
+		if _, ok := cfg.FilesName[cleanPart]; ok {
 			return true
 		}
 	}

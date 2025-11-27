@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/figurecode/files-remover/conf"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,4 +52,44 @@ func TestResolvePath(t *testing.T) {
 
 		checkerPath(t, tCases)
 	})
+}
+
+func Test_match(t *testing.T) {
+	tCests := []struct {
+		name  string
+		cfg   conf.Config
+		fName string
+		want  bool
+	}{
+		{
+			name:  "exact match",
+			cfg:   conf.Config{FilesName: map[string]bool{"document.pdf": true}},
+			fName: "document.pdf",
+			want:  true,
+		},
+		{
+			name: "partial match",
+			cfg: conf.Config{
+				FileNameSep: "-",
+				FilesName:   map[string]bool{"66f3c59b27ea50223262041": true},
+			},
+			fName: "66f3c59b27ea50223262041-5f8033af82716c6a4406628341d86046.pdf",
+			want:  true,
+		},
+		{
+			name: "regarding the expansion",
+			cfg: conf.Config{
+				FileNameSep: "-",
+				FilesName:   map[string]bool{"5f8033af82716c6a4406628341d86046": true},
+			},
+			fName: "66f3c59b27ea50223262041-5f8033af82716c6a4406628341d86046.pdf",
+			want:  true,
+		},
+	}
+
+	for _, tt := range tCests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, match(tt.cfg, tt.fName))
+		})
+	}
 }
