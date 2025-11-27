@@ -77,6 +77,15 @@ func Test_match(t *testing.T) {
 			want:  true,
 		},
 		{
+			name: "partial match",
+			cfg: conf.Config{
+				FileNameSep: "_",
+				FilesName:   map[string]bool{"66f3c59b27ea50223262041": true},
+			},
+			fName: "66f3c59b27ea50223262041_5f8033af82716c6a4406628341d86046.pdf",
+			want:  true,
+		},
+		{
 			name: "regarding the expansion",
 			cfg: conf.Config{
 				FileNameSep: "-",
