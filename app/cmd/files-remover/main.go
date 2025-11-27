@@ -42,7 +42,7 @@ func main() {
 		conf.WithExcludeDir(excDir),
 		conf.WithIsDemo("true"),
 	)
-	
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error configuration: %v\n", err)
 	}
@@ -55,12 +55,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	remover := remover.NewRemover(cfg.IsDemo)
+	remover := remover.NewRemover(cfg)
 
 	err = remover.Execute(files)
 
 	if err != nil {
 		fmt.Fprintf(cfg.ErrStream, "Error remove files %v\n", err)
+
+		os.Exit(1)
 	}
 
 	fmt.Println("Ok")

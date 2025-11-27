@@ -1,22 +1,24 @@
 package remover
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/figurecode/files-remover/conf"
 	"github.com/figurecode/files-remover/scanner"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRemover(t *testing.T) {
 	t.Run("Is Demo mode", func(t *testing.T) {
-		remover := NewRemover(true)
+		remover := NewRemover(conf.Config{IsDemo: true})
 
 		assert.Implements(t, (*Remover)(nil), remover)
 		assert.IsType(t, DebugRemover{}, remover)
 	})
 
 	t.Run("Is Action mode", func(t *testing.T) {
-		remover := NewRemover(false)
+		remover := NewRemover(conf.Config{IsDemo: false})
 
 		assert.Implements(t, (*Remover)(nil), remover)
 		assert.IsType(t, ActionRemover{}, remover)
@@ -25,19 +27,23 @@ func TestNewRemover(t *testing.T) {
 
 func TestDebugRemover_Execute(t *testing.T) {
 	t.Run("Empty files list", func(t *testing.T) {
-		remover := DebugRemover{}
+		remover := DebugRemover{
+			outStream: &bytes.Buffer{},
+		}
 
 		err := remover.Execute(scanner.FoundFiles{})
 
-		assert.Error(t, err)
+		assert.NoError(t, err)
 	})
 
 	t.Run("Nil files list", func(t *testing.T) {
-		remover := DebugRemover{}
+		remover := DebugRemover{
+			outStream: &bytes.Buffer{},
+		}
 
 		err := remover.Execute(nil)
 
-		assert.Error(t, err)
+		assert.NoError(t, err)
 	})
 
 	t.Run("Non-empty files list", func(t *testing.T) {
@@ -46,7 +52,9 @@ func TestDebugRemover_Execute(t *testing.T) {
 			"/tmp/file2.txt": 0,
 		}
 
-		remover := DebugRemover{}
+		remover := DebugRemover{
+			outStream: &bytes.Buffer{},
+		}
 		err := remover.Execute(files)
 
 		assert.NoError(t, err)
@@ -59,7 +67,7 @@ func TestActionRemover_Execute(t *testing.T) {
 
 		err := remover.Execute(scanner.FoundFiles{})
 
-		assert.Error(t, err)
+		assert.NoError(t, err)
 	})
 
 	t.Run("Nil files list", func(t *testing.T) {
@@ -67,7 +75,7 @@ func TestActionRemover_Execute(t *testing.T) {
 
 		err := remover.Execute(nil)
 
-		assert.Error(t, err)
+		assert.NoError(t, err)
 	})
 
 	t.Run("Non-empty files list", func(t *testing.T) {
