@@ -1,6 +1,7 @@
 package remover
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"text/template"
@@ -10,12 +11,25 @@ import (
 )
 
 const debugReportTempl = `{{.FilesCount}} files will be deleted in total
-{{.Size}} will be freed up
+{{humanSize .Size}} of disk space will be freed
 
 Files to be deleted:
 {{range .Files}}---------------------------------
 PATH: {{.}}
 {{end}}`
+
+func humanSize(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
 
 type Remover interface {
 	Execute(files scanner.FoundFiles) error
@@ -35,7 +49,10 @@ func (d DebugRemover) Execute(files scanner.FoundFiles) error {
 		Files      []string
 		Size       int64
 	}
-	var report = template.Must(template.New("Debug mode").Parse(debugReportTempl))
+	var report = template.Must(
+		template.New("Debug mode").
+			Funcs(template.FuncMap{"humanSize": humanSize}).
+			Parse(debugReportTempl))
 
 	reportParam.FilesCount = len(files)
 
