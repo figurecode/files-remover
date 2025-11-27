@@ -13,12 +13,12 @@ var ErrMessDirIsNotSpecified = errors.New("Search directory not specified")
 var ErrMessFileListIsEmpty = errors.New("The file name list cannot be empty")
 
 type Config struct {
-	Dir                  string          // обязательный параметр, директория в которой будем искать
-	FilesName            map[string]bool // обязательный параметр названия файлов, которые будем искать и удалять
-	ExcDirs              []string        // названия поддерикторий, которые нужно исключить из обхода
-	FileNameSep          string          // разделитель для разбиения названия файла на части
-	IsDemo               bool            // демо-режим работы приложения, выводит только информацию
-	ErrStream, OutStream io.Writer       // стандартный вывод ошибок и результатов
+	Dir                  string
+	FilesName            map[string]bool
+	ExcDirs              []string
+	FileNameSep          string
+	IsDemo               bool
+	ErrStream, OutStream io.Writer
 }
 
 type Option func(*Config) error
