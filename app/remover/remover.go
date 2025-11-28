@@ -57,7 +57,7 @@ func (d DebugRemover) Execute(files scanner.FoundFiles) error {
 			Parse(debugReportTempl))
 
 	reportParam.FilesCount = len(files)
-	reportParam.Files = make([]string, len(files))
+	reportParam.Files = make([]string, 0, len(files))
 
 	for path, size := range files {
 		reportParam.Files = append(reportParam.Files, path)
