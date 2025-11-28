@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/figurecode/files-remover/conf"
@@ -48,7 +49,7 @@ files-remover — массовая очистка файлов по шаблон
 
 	path, err := scanner.ResolvePath(scanDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error scan dir: %v\n", err)
+		log.Fatalf("Error scan dir: %v\n", err)
 	}
 
 	cfg, err := conf.New(
@@ -60,9 +61,7 @@ files-remover — массовая очистка файлов по шаблон
 	)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error configuration: %v\n", err)
-
-		os.Exit(1)
+		log.Fatalf("Error configuration: %v\n", err)
 	}
 
 	files, err := scanner.ScanDir(cfg)
@@ -82,5 +81,4 @@ files-remover — массовая очистка файлов по шаблон
 
 		os.Exit(1)
 	}
-	os.Exit(0)
 }
