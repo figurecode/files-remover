@@ -24,7 +24,7 @@ type Config struct {
 type Option func(*Config) error
 
 func (c Config) validate() error {
-	if len(c.Dir) == 0 {
+	if c.Dir == "" {
 		return errMessDirIsNotSpecified
 	}
 
@@ -61,7 +61,7 @@ func WithOutStream(outStream io.Writer) Option {
 
 func WithExcludeDir(excDir string) Option {
 	return func(c *Config) error {
-		if len(excDir) != 0 {
+		if excDir != "" {
 			d := strings.Split(excDir, ",")
 
 			for _, v := range d {
@@ -91,6 +91,8 @@ func WithIsDemo(isDemo string) Option {
 
 func New(dir string, fNames []string, opts ...Option) (Config, error) {
 	c := Config{
+		Dir:         strings.TrimSpace(dir),
+		FilesName:   make(map[string]bool, 0),
 		ExcDirs:     make([]string, 0),
 		FileNameSep: "-",
 		IsDemo:      true,
@@ -98,15 +100,8 @@ func New(dir string, fNames []string, opts ...Option) (Config, error) {
 		OutStream:   os.Stdout,
 	}
 
-	c.Dir = strings.TrimSpace(dir)
-
-	if c.FilesName == nil {
-		c.FilesName = make(map[string]bool)
-	}
 	for _, v := range fNames {
-		if !c.FilesName[v] {
-			c.FilesName[v] = true
-		}
+		c.FilesName[v] = true
 	}
 
 	err := c.validate()
