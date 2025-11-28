@@ -18,7 +18,7 @@
 ## Установка
 
 ```bash
-go install github.com/figurecode/files-remover@latest
+go install github.com/figurecode/files-remover/cmd/files-remover/@latest
 ```
 
 Или собрать из исходников:
@@ -26,7 +26,7 @@ go install github.com/figurecode/files-remover@latest
 ```bash
 git clone https://github.com/figurecode/files-remover.git
 cd files-remover
-go build -o files-remover
+go build -o files-remover cmd/files-remover/main.go
 ```
 
 ## Использование
