@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-var ErrMessErrStreamIsNil = errors.New("ErrStream cannot be nil")
-var ErrMessOutStreamIsNil = errors.New("OutStream cannot be nil")
-var ErrMessDirIsNotSpecified = errors.New("Search directory not specified")
-var ErrMessFileListIsEmpty = errors.New("The file name list cannot be empty")
+var errMessErrStreamIsNil = errors.New("ErrStream cannot be nil")
+var errMessOutStreamIsNil = errors.New("OutStream cannot be nil")
+var errMessDirIsNotSpecified = errors.New("Search directory not specified")
+var errMessFileListIsEmpty = errors.New("The file name list cannot be empty")
 
 type Config struct {
 	Dir                  string
@@ -25,11 +25,11 @@ type Option func(*Config) error
 
 func (c Config) validate() error {
 	if len(c.Dir) == 0 {
-		return ErrMessDirIsNotSpecified
+		return errMessDirIsNotSpecified
 	}
 
 	if len(c.FilesName) == 0 {
-		return ErrMessFileListIsEmpty
+		return errMessFileListIsEmpty
 	}
 
 	return nil
@@ -38,7 +38,7 @@ func (c Config) validate() error {
 func WithErrStream(errStream io.Writer) Option {
 	return func(c *Config) error {
 		if errStream == nil {
-			return ErrMessErrStreamIsNil
+			return errMessErrStreamIsNil
 		}
 
 		c.ErrStream = errStream
@@ -50,7 +50,7 @@ func WithErrStream(errStream io.Writer) Option {
 func WithOutStream(outStream io.Writer) Option {
 	return func(c *Config) error {
 		if outStream == nil {
-			return ErrMessOutStreamIsNil
+			return errMessOutStreamIsNil
 		}
 
 		c.OutStream = outStream
