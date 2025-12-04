@@ -2,91 +2,127 @@ package remover
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
-
-	"github.com/figurecode/files-remover/conf"
-	"github.com/figurecode/files-remover/scanner"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestNewRemover(t *testing.T) {
-	t.Run("Is Demo mode", func(t *testing.T) {
-		remover := NewRemover(conf.Config{IsDemo: true})
+func TestExecute(t *testing.T) {
+	t.Run("Remove real files", func(t *testing.T) {
+		tmpDir := t.TempDir()
 
-		assert.Implements(t, (*Remover)(nil), remover)
-		assert.IsType(t, DebugRemover{}, remover)
+		files := map[string]int64{
+			filepath.Join(tmpDir, "info-1.log"): 100,
+			filepath.Join(tmpDir, "info-2.log"): 200,
+		}
+
+		for path := range files {
+			if err := os.WriteFile(path, []byte("important"), 0644); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		if err := Execute(files); err != nil {
+			t.Fatalf("Execute() return error: %v", err)
+		}
+
+		for path := range files {
+			if _, err := os.Stat(path); !os.IsNotExist(err) {
+				t.Errorf("File %q was not deleted", path)
+			}
+		}
 	})
 
-	t.Run("Is Action mode", func(t *testing.T) {
-		remover := NewRemover(conf.Config{IsDemo: false})
+	t.Run("File already missing", func(t *testing.T) {
+		files := map[string]int64{
+			"/tmp/file/does-not/exist/really.log": 12345,
+		}
 
-		assert.Implements(t, (*Remover)(nil), remover)
-		assert.IsType(t, ActionRemover{}, remover)
+		if err := Execute(files); err != nil {
+			t.Fatalf("Execute() returned error on missing file: %v", err)
+		}
+	})
+
+	t.Run("Empty files map", func(t *testing.T) {
+		files := map[string]int64{}
+
+		if err := Execute(files); err != nil {
+			t.Fatalf("Execute() on empty map returned error: %v", err)
+		}
 	})
 }
 
-func TestDebugRemover_Execute(t *testing.T) {
-	t.Run("Empty files list", func(t *testing.T) {
-		remover := DebugRemover{
-			outStream: &bytes.Buffer{},
+func TestDebugRemover(t *testing.T) {
+	t.Run("Does not remove files", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		files := map[string]int64{
+			filepath.Join(tmpDir, "info-1.log"): 100,
+			filepath.Join(tmpDir, "info-2.log"): 200,
 		}
 
-		err := remover.Execute(scanner.FoundFiles{})
-
-		assert.NoError(t, err)
-	})
-
-	t.Run("Nil files list", func(t *testing.T) {
-		remover := DebugRemover{
-			outStream: &bytes.Buffer{},
+		for path := range files {
+			if err := os.WriteFile(path, []byte("important"), 0644); err != nil {
+				t.Fatal(err)
+			}
 		}
 
-		err := remover.Execute(nil)
-
-		assert.NoError(t, err)
-	})
-
-	t.Run("Non-empty files list", func(t *testing.T) {
-		files := scanner.FoundFiles{
-			"/tmp/file1.txt": 0,
-			"/tmp/file2.txt": 0,
+		var buf bytes.Buffer
+		if err := DebugRemover(files, &buf); err != nil {
+			t.Fatal(err)
 		}
 
-		remover := DebugRemover{
-			outStream: &bytes.Buffer{},
+		for path := range files {
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				t.Fatalf("DebugRemover() deleted file %s", path)
+			}
 		}
-		err := remover.Execute(files)
-
-		assert.NoError(t, err)
-	})
-}
-
-func TestActionRemover_Execute(t *testing.T) {
-	t.Run("Empty files list", func(t *testing.T) {
-		remover := ActionRemover{}
-
-		err := remover.Execute(scanner.FoundFiles{})
-
-		assert.NoError(t, err)
 	})
 
-	t.Run("Nil files list", func(t *testing.T) {
-		remover := ActionRemover{}
-
-		err := remover.Execute(nil)
-
-		assert.NoError(t, err)
-	})
-
-	t.Run("Non-empty files list", func(t *testing.T) {
-		files := scanner.FoundFiles{
-			"/tmp/file1.txt": 0,
-			"/tmp/file2.txt": 0,
+	t.Run("Output files and size", func(t *testing.T) {
+		files := map[string]int64{
+			"/tmp/log/fake/info1.log": 1024,
+			"/tmp/log/fake/info2.log": 2048,
 		}
 
-		remover := ActionRemover{}
-		err := remover.Execute(files)
+		var buf bytes.Buffer
+		if err := DebugRemover(files, &buf); err != nil {
+			t.Fatalf("DebugRemover() error %v", err)
+		}
 
-		assert.NoError(t, err)
+		got := buf.String()
+		want := []string{
+			"2 files will be deleted in total",
+			"3.0 KB of disk space will be freed",
+			"Files to be deleted:",
+			"---------------------------------",
+			"PATH: /tmp/log/fake/info1.log",
+			"---------------------------------",
+			"PATH: /tmp/log/fake/info2.log",
+			"",
+			"END",
+		}
+
+		for _, w := range want {
+			if !strings.Contains(got, w) {
+				t.Errorf("output missing %q\nfull output:\n%s", w, got)
+			}
+		}
+	})
+
+	t.Run("Empty files map", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		files := make(map[string]int64)
+
+		if err := DebugRemover(files, &buf); err != nil {
+			t.Fatalf("DebugRemover() on empty map returned error: %v", err)
+		}
+
+		expected := "0 files will be deleted in total\n0 B of disk space will be freed\n\nFiles to be deleted:\n\nEND\n"
+		if got := buf.String(); got != expected {
+			t.Errorf("wrong output for empty map\ngot:  %q\nwant: %q", got, expected)
+		}
 	})
 }
