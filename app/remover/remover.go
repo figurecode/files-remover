@@ -5,9 +5,6 @@ import (
 	"io"
 	"os"
 	"text/template"
-
-	"github.com/figurecode/files-remover/conf"
-	"github.com/figurecode/files-remover/scanner"
 )
 
 const debugReportTempl = `{{.FilesCount}} files will be deleted in total
@@ -33,17 +30,9 @@ func humanSize(bytes int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
-type Remover interface {
-	Execute(files scanner.FoundFiles) error
-}
-
-type DebugRemover struct {
-	outStream io.Writer
-}
-
-func (d DebugRemover) Execute(files scanner.FoundFiles) error {
+func DebugRemover(files map[string]int64, out io.Writer) error {
 	if len(files) == 0 {
-		files = make(scanner.FoundFiles)
+		files = make(map[string]int64)
 	}
 
 	var reportParam struct {
@@ -64,16 +53,14 @@ func (d DebugRemover) Execute(files scanner.FoundFiles) error {
 		reportParam.Size += size
 	}
 
-	if err := report.Execute(d.outStream, reportParam); err != nil {
+	if err := report.Execute(out, reportParam); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-type ActionRemover struct{}
-
-func (a ActionRemover) Execute(files scanner.FoundFiles) error {
+func Execute(files map[string]int64) error {
 	if len(files) == 0 {
 		return nil
 	}
@@ -87,14 +74,4 @@ func (a ActionRemover) Execute(files scanner.FoundFiles) error {
 	}
 
 	return nil
-}
-
-func NewRemover(cfg conf.Config) Remover {
-	if cfg.IsDemo {
-		return DebugRemover{
-			outStream: cfg.OutStream,
-		}
-	}
-
-	return ActionRemover{}
 }

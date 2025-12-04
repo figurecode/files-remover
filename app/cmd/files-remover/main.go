@@ -72,9 +72,11 @@ files-remover — массовая очистка файлов по шаблон
 		os.Exit(1)
 	}
 
-	remover := remover.NewRemover(cfg)
-
-	err = remover.Execute(files)
+	if cfg.IsDemo {
+		err = remover.DebugRemover(files, cfg.OutStream)
+	} else {
+		err = remover.Execute(files)
+	}
 
 	if err != nil {
 		fmt.Fprintf(cfg.ErrStream, "Error remove files %v\n", err)
