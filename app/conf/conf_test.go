@@ -2,6 +2,7 @@ package conf
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,16 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Run("correct config", func(t *testing.T) {
+		want := Config{
+			FilesName:   map[string]bool{"file1": true, "file2": true},
+			Dir:         "/",
+			IsDemo:      true,
+			ExcDirs:     make([]string, 0),
+			OutStream:   os.Stdout,
+			ErrStream:   os.Stderr,
+			FileNameSep: "-",
+		}
+
 		filesName := []string{"file1", "file2"}
 		cfg, err := New(
 			"/",
@@ -26,8 +37,7 @@ func TestNew(t *testing.T) {
 			}
 		}
 
-		assert.True(t, cfg.IsDemo)
-		assert.Len(t, cfg.ExcDirs, 0)
+		assert.Equal(t, cfg, want)
 	})
 
 	t.Run("not correct config", func(t *testing.T) {
