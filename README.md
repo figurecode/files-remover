@@ -1,27 +1,35 @@
 # files-remover
+![Go](https://github.com/figurecode/files-remover/actions/workflows/go.yml/badge.svg)
+![GitHub release](https://img.shields.io/github/release/figurecode/files-remover.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-Утилита на Go для массового удаления файлов по шаблону имени в указанной директории.
+[![English](https://img.shields.io/badge/Language-English-blue.svg)](README.md)
+[![Русский](https://img.shields.io/badge/Language-Русский-blue.svg)](README.ru.md)
 
-Полезно, когда нужно почистить временные файлы, кэшей, бэкапов вида:
+A Go utility for bulk deletion of files by name in a specified directory.
+
+Useful for cleaning up temporary files, caches, and backups like:
 - `backup-2025-01-01.zip`
 - `session_12345.tmp`
 - `debug-2025.log`
 
-## Возможности
+## Features
 
-- Поиск по точному имени или по шаблону (через разделитель в имени)
-- Исключение произвольных поддиректорий (например, `node_modules`, `.git`)
-- Демо-режим (`-m true`) — показывает, что будет удалено, ничего не трогая
-- Человекочитаемый отчёт: сколько файлов, сколько места освободится (в KB/MB/GB)
-- Безопасное удаление: ошибки `file not exists` игнорируются (TOCTOU protection)
+- Search by exact name or by prefix before a separator
+- Exclude arbitrary subdirectories (e.g., `node_modules`, `.git`)
+- Demo mode (`-m true`) — shows what will be deleted without touching anything
+- Human-readable report: number of files and freed space (in KB/MB/GB)
+- Safe deletion: "file not exists" errors are ignored (TOCTOU protection)
 
-## Установка
+## Installation
+
+The simplest way (requires Go 1.25+):
 
 ```bash
-go install github.com/figurecode/files-remover/cmd/files-remover/@latest
+go install github.com/figurecode/files-remover/cmd/files-remover@latest
 ```
 
-Или собрать из исходников:
+Or build from source:
 
 ```bash
 git clone https://github.com/figurecode/files-remover.git
@@ -29,55 +37,54 @@ cd files-remover
 go build -o files-remover cmd/files-remover/main.go
 ```
 
-## Использование
+## Usage
 
-### Основные флаги
+### Main flags
 
 ```bash
-./files-remover -d <директория> [флаги] <шаблон1> [шаблон2...]
+./files-remover -d <directory> [flags] <pattern1> [pattern2...]
 ```
 
-| Флаг | Обязательный? | Описание                                                                                 | По умолчанию        |
-|:-----|:-------------:|------------------------------------------------------------------------------------------|---------------------|
-| `-d` | Да*           | Путь к директории для поиска (*обязателен, если не запущено из нужной папки)             | текущая директория  |
-| `-e` | Нет           | Исключаемые поддиректории (через запятую)                                                | —                   |
-| `-m` | Нет           | `true` — демо-режим, `false` — реальное удаление                                         | `true`              |
-| `-s` | Нет           | Разделитель для разбивки имени файла по частям                                           | `-`                 |
+| Flag | Required?    | Description                                                                              | Default            |
+|:-----|:------------|------------------------------------------------------------------------------------------|--------------------|
+| `-d` | Yes*        | Path to the search directory (*required if not run from the target folder)               | Current directory  |
+| `-e` | No          | Excluded subdirectories (comma-separated)                                                | (none)             |
+| `-m` | No          | `true` — demo mode, `false` — real deletion                                              | `true`             |
+| `-s` | No          | Separator for splitting filename parts                                                   | (none)             |
 
-### Примеры
+### Examples
 
-1. Показать, что будет удалено (демо-режим по умолчанию):
+1. Show what will be deleted (demo mode by default):
 
 ```bash
 ./files-remover -d /var/log app-debug.log backup-old.zip
 ```
 
-2. Реально удалить все файлы с именем содержащим `temp-2025`:
+2. Actually delete all files whose names start with `temp-2025` (e.g., temp-2025-12-12.log, temp-2025-11-01.log):
 
 ```bash
-./files-remover -d /tmp -m false temp-2025
+./files-remover -d /tmp -m false -s "-" temp-2025
 ```
 
-3. Удалить все `.log` файлы старше определённой даты, исключив системные папки:
+3. Delete all `access-2024.log` and `error-2024.log` files, excluding folders `/var/log/journal`, `.snapshots`:
 
 ```bash
 ./files-remover -d /var/log -e /var/log/journal,.snapshots -m false access-2024.log error-2024.log
 ```
 
-4. Удалить всё, что содержит `-cache-` в имени:
+4. Delete everything starting with `cache-` in the name:
 
 ```bash
-# Разделитель по умолчанию "-", поэтому работает
-./files-remover -d ~/Library/Caches -m false cache
+./files-remover -d ~/Library/Caches -m false -s "-" cache
 ```
 
-Если нужно использовать другой разделитель (например, `_`):
+To use a different separator (e.g., `_`):
 
 ```bash
 ./files-remover -d /data -s _ -m false session
 ```
 
-## Вывод в демо-режиме (пример)
+## Demo mode output (example)
 
 ```text
 127 files will be deleted in total
@@ -94,16 +101,22 @@ PATH: /var/log/nginx/access-2024-12-01.log
 END
 ```
 
-## Безопасность
+## Safety
 
-- По умолчанию работает в демо-режиме
-- Всегда запускайте сначала без `-m false`
-- Ошибки вида "файл уже удалён" игнорируются — утилита не падает из-за гонки
+- Demo mode by default
+- Always run first without `-m false`
+- "File already deleted" errors are ignored — the utility won't crash due to race conditions
 
-## Лицензия
+## License
 
 MIT
 
-## Участие
+## Contributing
 
-Если вы хотите внести свой вклад в проект, создайте задачу или отправьте запрос на извлечение (pull request) на GitHub.
+If you want to contribute to the project, create an issue or send a pull request on GitHub.
+
+## Acknowledgments
+
+Thanks to the following people for their contributions:
+
+- [@etilite](https://github.com/etilite) — code review and valuable advice
