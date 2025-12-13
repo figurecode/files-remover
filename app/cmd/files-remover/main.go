@@ -18,26 +18,27 @@ func main() {
 	var isDemo string
 	var filesName []string
 
-	flag.StringVar(&scanDir, "d", "", "Директория, в которой будет происходить поиск. Если не указан, то используется директория запуска скрипта")
-	flag.StringVar(&excDir, "e", "", "Исключаемые поддиректории через запятую")
-	flag.StringVar(&isDemo, "m", "true", "Режим: true — демо, false — удаление (по умолчанию true)")
-	flag.StringVar(&fileNameSep, "s", "", "Разделитель в имени файла (по умолчанию не указан). Если не указан, поиск будет производится по полному названию файла с расширением")
+	flag.StringVar(&scanDir, "d", "", "Directory to search in. If not specified, the directory from which the program is run will be used")
+	flag.StringVar(&excDir, "e", "", "Excluded subdirectories (comma-separated)")
+	flag.StringVar(&isDemo, "m", "true", "Mode: true — demo (dry-run), false — actual deletion (default: true)")
+	flag.StringVar(&fileNameSep, "s", "", "Separator in filename (default: empty). If not specified, search is performed by exact full filename including extension")
 
 	if len(os.Args) == 1 || (len(os.Args) == 2 && (os.Args[1] == "-h" || os.Args[1] == "--help")) {
 		fmt.Printf(`
-files-remover — массовая очистка файлов по шаблону имени
+files-remover — bulk file removal by name pattern
 
-Использование:
-	files-remover -d <директория> [флаги] <шаблон1> [шаблон2...]
+Usage:
+	files-remover -d <directory> [flags] <pattern1> [pattern2...]
 
-Флаги:
-	-d string   Директория для поиска (если не указана, то используется директория запуска скрипта)
-	-e string   Исключаемые поддиректории через запятую
-	-m string   Режим: true — демо, false — удаление (по умолчанию true)
-	-s string   Разделитель в имени файла (по умолчанию не указан)
+Flags:
+	-d string   Directory to search (if omitted, current working directory is used)
+	-e string   Excluded subdirectories (comma-separated)
+	-m string   Mode: true — demo/dry-run, false — real deletion (default: true)
+	-s string   Filename separator (default: empty)
 
-Примеры:
-	files-remover -d /tmp temp-log backup-2024
+Examples:
+	files-remover -d /tmp temp-log backup-2024-10-12.tgz
+	files-remover -d /tmp temp-log -s . backup-2024
 	files-remover -d /var/log -m false -e journal access-2024.log
 `)
 		os.Exit(0)
