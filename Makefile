@@ -22,3 +22,6 @@ down: ## Остановить контейнер
 
 bash: ## Зайти в контейнер go
 	docker compose -f docker/docker-compose.yml exec go sh
+
+test: 
+	docker compose -f docker/docker-compose.yml exec go go test -v -shuffle=on -count=2 -short -cover -race ./...
