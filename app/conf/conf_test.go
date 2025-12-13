@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 			ExcDirs:     make([]string, 0),
 			OutStream:   os.Stdout,
 			ErrStream:   os.Stderr,
-			FileNameSep: "-",
+			FileNameSep: "",
 		}
 
 		filesName := []string{"file1", "file2"}

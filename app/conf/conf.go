@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-var errMessErrStreamIsNil = errors.New("ErrStream cannot be nil")
-var errMessOutStreamIsNil = errors.New("OutStream cannot be nil")
-var errMessDirIsNotSpecified = errors.New("Search directory not specified")
-var errMessFileListIsEmpty = errors.New("The file name list cannot be empty")
+var errMessErrStreamIsNil = errors.New("errStream cannot be nil")
+var errMessOutStreamIsNil = errors.New("outStream cannot be nil")
+var errMessDirIsNotSpecified = errors.New("search directory not specified")
+var errMessFileListIsEmpty = errors.New("the file name list cannot be empty")
 
 type Config struct {
 	Dir                  string
@@ -94,7 +94,7 @@ func New(dir string, fNames []string, opts ...Option) (Config, error) {
 		Dir:         strings.TrimSpace(dir),
 		FilesName:   make(map[string]bool, 0),
 		ExcDirs:     make([]string, 0),
-		FileNameSep: "-",
+		FileNameSep: "",
 		IsDemo:      true,
 		ErrStream:   os.Stderr,
 		OutStream:   os.Stdout,
