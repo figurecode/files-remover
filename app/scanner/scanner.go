@@ -43,7 +43,7 @@ func ScanDir(cfg conf.Config) (FoundFiles, error) {
 		}
 
 		if !d.IsDir() {
-			return checkFile(cfg, path, d, &files)
+			return checkFile(cfg, path, d, files)
 		}
 
 		if len(cfg.ExcDirs) > 0 && slices.Contains(cfg.ExcDirs, d.Name()) {
@@ -56,10 +56,10 @@ func ScanDir(cfg conf.Config) (FoundFiles, error) {
 	return files, err
 }
 
-func checkFile(cfg conf.Config, path string, d os.DirEntry, files *FoundFiles) error {
-	_, fName := filepath.Split(path)
+func checkFile(cfg conf.Config, path string, d os.DirEntry, files FoundFiles) error {
+	_, curentFileName := filepath.Split(path)
 
-	if !match(cfg, fName) {
+	if !match(curentFileName, cfg.FilesName, cfg.FileNameSep) {
 		return nil
 	}
 
@@ -69,25 +69,25 @@ func checkFile(cfg conf.Config, path string, d os.DirEntry, files *FoundFiles) e
 		return nil
 	}
 
-	(*files)[path] = fInfo.Size()
+	files[path] = fInfo.Size()
 
 	return nil
 }
 
-func match(cfg conf.Config, fName string) bool {
-	if len(cfg.FileNameSep) == 0 {
-		if _, ok := cfg.FilesName[fName]; ok {
+func match(curentFileName string, filesSearchNames map[string]bool, fileNameSep string) bool {
+	if fileNameSep == "" {
+		if _, ok := filesSearchNames[curentFileName]; ok {
 			return true
 		}
 
 		return false
 	}
 
-	parts := strings.Split(fName, cfg.FileNameSep)
+	parts := strings.Split(curentFileName, fileNameSep)
 	for _, part := range parts {
 		cleanPart := strings.TrimSuffix(part, filepath.Ext(part))
 
-		if _, ok := cfg.FilesName[cleanPart]; ok {
+		if _, ok := filesSearchNames[cleanPart]; ok {
 			return true
 		}
 	}
