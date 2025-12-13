@@ -1,0 +1,11 @@
+version: "2"
+
+run:
+  go: "1.25.4"
+  timeout: 5m
+
+linters:
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt.Fprintf
