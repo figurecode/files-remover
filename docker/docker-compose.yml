@@ -1,9 +1,0 @@
-name: 'files-remover'
-
-services:
-  go:
-    container_name: go-files-remover
-    build:
-      context: ./
-    volumes:
-      - ../:/app
