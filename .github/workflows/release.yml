@@ -3,7 +3,14 @@ name: goreleaser
 on:
   push:
     tags:
-      - 'v*'
+      - "*"
+  workflow_dispatch:
+    inputs:
+      snapshot:
+        description: 'Create snapshot release'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -20,13 +27,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: "1.25"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: '~> v2'
-          args: release --clean
+          version: "~> v2"
+          args: ${{ github.event.inputs.snapshot == 'true' && 'release --snapshot --clean' || 'release --clean' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
